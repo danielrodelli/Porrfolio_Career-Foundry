@@ -1,0 +1,140 @@
+/*Customer revenue by Country*/
+SELECT  D.country, COUNT(DISTINCT A.customer_id) AS customers, 		
+		ROUND(SUM (E.amount)/COUNT(DISTINCT A.customer_id),2) 
+		AS average_revenue
+FROM customer A		
+INNER JOIN address B ON A.address_id = B.address_id		
+INNER JOIN city C ON B.city_id = C.city_id		
+INNER JOIN country D ON C.country_id = D.country_id		
+
+
+/* Revenue by film category*/
+SELECT 	E.name AS category, SUM(A.amount)AS total_revenue,	
+		COUNT(DISTINCT C.film_id) AS number_of_films,
+		ROUND((SUM(A.amount))/(COUNT(DISTINCT C.film_id)),2) AS average_revenue
+FROM payment A		
+INNER JOIN rental B ON A.rental_id = B.rental_id		
+INNER JOIN inventory C ON B.inventory_id = C.inventory_id		
+INNER JOIN film_category D ON C.film_id = D.film_id		
+INNER JOIN category E ON D.category_id = E.category_id		
+GROUP BY E.name		
+ORDER BY total_revenue	
+
+
+/*Revenue by Day*/
+SELECT	EXTRACT (DAY FROM payment_date) AS day_of_the_month,	
+		SUM(amount) AS revenue
+FROM payment		
+GROUP BY day_of_the_month		
+ORDER BY day_of_the_month		
+
+
+/*Top5 Films*/
+SELECT D.title AS film_title, SUM(A.amount) AS revenue
+FROM payment A
+INNER JOIN rental B ON A.rental_id = B.rental_id
+INNER JOIN inventory C ON B.inventory_id = C.inventory_id
+INNER JOIN film D ON C.film_id = D.film_id
+GROUP BY film_title
+ORDER BY revenue DESC
+LIMIT 5
+
+
+/*Revenue by Store*/
+SELECT C.store_id, SUM(A.amount) AS revenue
+FROM payment A
+INNER JOIN rental B ON A.rental_id = B.rental_id
+INNER JOIN inventory C ON B.inventory_id = C.inventory_id
+GROUP BY C.store_id
+ORDER BY revenue
+
+
+/*Top Cities by number of customers*/
+SELECT C.city, D.country, COUNT (customer_id) AS customers				
+FROM customer A				
+INNER JOIN address B ON A.address_id = B.address_id				
+INNER JOIN city C ON B.city_id = C.city_id				
+INNER JOIN country D ON C.country_id = D.country_id				
+WHERE country IN ('India', 'China', 'United States', 'Japan', 'Mexico', 				
+				  'Brazil', 'Russian Federation', 'Philippines', 'Turkey', 'Indonesia')
+GROUP BY city, country				
+ORDER BY customers DESC				
+LIMIT 10				
+
+
+/*Top Customers*/
+SELECT 	B.first_name, B.last_name, COUNT(A.rental_id) AS rented_films, SUM(C.amount) AS total_paid		
+FROM 	rental A		
+INNER JOIN 	payment C ON A.rental_id = C.rental_id		
+LEFT JOIN 	(SELECT B.customer_id, B.first_name, B.last_name, E.country, SUM(A.amount) AS total_paid		
+			FROM payment A
+			INNER JOIN customer B ON A.customer_id = B.customer_id
+			INNER JOIN address C ON B.address_id = C.address_id
+			INNER JOIN city D ON C.city_id  = D.city_id
+			INNER JOIN country E ON D.country_id = E.country_id
+			GROUP BY B.customer_id, B.first_name, B.last_name, E.country
+			ORDER BY SUM(amount) DESC
+			LIMIT 10) 
+B ON A.customer_id = B.customer_id			
+WHERE B.first_name IS NOT NULL AND B.last_name IS NOT NULL			
+GROUP BY B.first_name, B.last_name			
+ORDER BY rented_films DESC			
+
+
+/*Revenue by Film Rating*/
+SELECT 	D.rating, SUM(A.amount) AS total_revenue,	
+		ROUND((SUM(A.amount)/COUNT(DISTINCT D.film_id)),2) AS average_revenue
+FROM payment A		
+INNER JOIN rental B ON A.rental_id = B.rental_id		
+INNER JOIN inventory C ON B.inventory_id = C.inventory_id		
+INNER JOIN film D ON C.film_id = D.film_id		
+GROUP BY D.rating		
+ORDER BY average_revenue DESC		
+
+
+/* Film Summary*/
+SELECT	MIN(film_id) AS minimum_film_id,	
+		MAX(film_id) AS maximum_film_id,
+		ROUND(AVG(film_id),2) AS average_film_id,
+		MIN(release_year) AS minimum_release_year,
+		MAX(release_year) AS maximum_release_year,
+		ROUND(AVG(release_year),2) AS average_release_year,
+		MODE() WITHIN GROUP(ORDER BY language_id) AS mode_language,
+		MIN (rental_duration) AS minimum_rental_duration,
+		MAX(rental_duration) AS maximum_rental_duration,
+		ROUND(AVG(rental_duration),2) AS average_rental_duration,
+		MIN(rental_rate) AS minimum_rental_rate,
+		MAX(rental_rate) AS maximum_rental_rate,
+		ROUND(AVG(rental_rate),2) AS average_rental_rate,
+		MIN(length) AS minimum_length,
+		MAX(length) AS maximum_length,
+		ROUND(AVG(length),2) AS average_length,
+		MIN(replacement_cost) AS minimum_replacement_cost,
+		MAX(replacement_cost) AS maximum_replacement_cost,
+		ROUND(AVG(replacement_cost),2) AS average_replacement_cost,
+		MODE() WITHIN GROUP (ORDER BY rating) AS mode_rationg
+FROM film;		
+
+
+/*Customer summary*/
+SELECT	MIN(customer_id) AS minimum_customer_id,	
+		MAX(customer_id) AS minimum_customer_id,
+		ROUND(AVG(customer_id),2) AS average_customer_id,
+		MODE() WITHIN GROUP(ORDER BY first_name) AS mode_first_name,
+		MODE() WITHIN GROUP(ORDER BY last_name) AS mode_last_name,
+		MODE() WITHIN GROUP(ORDER BY email) AS mode_e_mail,
+		MIN(address_id) AS minimum_address_id,
+		MAX(address_id) AS maximum_address_id,
+		ROUND(AVG(address_id),2) AS average_address_id,
+		MODE() WITHIN GROUP(ORDER BY activebool) AS mode_active,
+		MIN(create_date) AS minimum_create_date,
+		MAX(create_date) AS maximum_create_date,
+		MIN(last_update) AS minimum_last_update,
+		MAX(last_update) AS maximum_last_update
+FROM customer;		
+
+
+
+
+
+
